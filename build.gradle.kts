@@ -3,6 +3,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 plugins {
     kotlin("jvm") version "1.6.21"
     application
+    `maven-publish`
 }
 
 group = "ru.devmark"
@@ -26,4 +27,16 @@ tasks.withType<KotlinCompile> {
 
 application {
     mainClass.set("MainKt")
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("number2text") {
+            from(components["kotlin"])
+        }
+    }
+
+    repositories {
+        mavenLocal()
+    }
 }
