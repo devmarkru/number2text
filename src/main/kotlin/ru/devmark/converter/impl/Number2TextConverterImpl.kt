@@ -1,30 +1,30 @@
 package ru.devmark.converter.impl
 
 import ru.devmark.converter.Number2TextConverter
+import ru.devmark.converter.unit.AbstractUnitInfo
+import ru.devmark.converter.model.ConverterResult
 import ru.devmark.converter.model.Gender
 import ru.devmark.converter.model.ThousandInfo
-import ru.devmark.converter.model.UnitInfo
+import ru.devmark.converter.unit.UnitInfo
 import kotlin.math.absoluteValue
 
 class Number2TextConverterImpl : Number2TextConverter {
 
-    override fun convertNumberUnitOnlyToText(number: Long, unit: UnitInfo): String {
-        val lastPart = convertCountWithUnitToWords(number, unit).last()
-        return "$number $lastPart"
-    }
+    override fun convertNumberToText(number: Long): String =
+        convertNumberToWordsWithUnit(number, DEFAULT_DIMENSION).numberWords
+            .joinToString(separator = " ")
 
-    override fun convertNumberWithUnitToText(number: Long, unit: UnitInfo): String {
-        return convertCountWithUnitToWords(number, unit)
+    override fun convertNumberToTextWithUnit(number: Long, unit: AbstractUnitInfo): String {
+        val result = convertNumberToWordsWithUnit(number, unit)
+        return (result.numberWords + result.unitWord)
             .joinToString(separator = " ")
     }
 
-    override fun convertNumberToText(number: Long): String {
-        return convertCountWithUnitToWords(number, DEFAULT_DIMENSION)
-            .joinToString(separator = " ")
-    }
+    override fun convertNumberToWordsWithUnit(number: Long, unit: AbstractUnitInfo): ConverterResult =
+        convertCountWithUnitToWords(number, unit)
 
-    private fun convertCountWithUnitToWords(number: Long, unit: UnitInfo): List<String> {
-        val dimensions = mutableListOf<UnitInfo>()
+    private fun convertCountWithUnitToWords(number: Long, unit: AbstractUnitInfo): ConverterResult {
+        val dimensions = mutableListOf<AbstractUnitInfo>()
         dimensions.add(unit)
         dimensions.addAll(DIMENSIONS)
         var absNumber = number.absoluteValue
@@ -46,16 +46,19 @@ class Number2TextConverterImpl : Number2TextConverter {
         }
         thousands.forEachIndexed { index, thousandInfo ->
             if (thousandInfo.numberValue > 0 || number == 0L) {
-                parts.add(thousandInfo.numberText)
+                parts.addAll(thousandInfo.numberWords)
             }
-            if (thousandInfo.dimension.isNotBlank() && (thousandInfo.numberValue > 0 || index == thousands.size - 1)) {
+            if (thousandInfo.dimension.isNotBlank() && thousandInfo.numberValue > 0 && index < thousands.lastIndex) {
                 parts.add(thousandInfo.dimension)
             }
         }
-        return parts
+        return ConverterResult(
+            numberWords = parts,
+            unitWord = thousands.lastOrNull()?.dimension ?: "",
+        )
     }
 
-    private fun thousandToWords(unsignedNumber: Int, unitInfo: UnitInfo): ThousandInfo {
+    private fun thousandToWords(unsignedNumber: Int, unitInfo: AbstractUnitInfo): ThousandInfo {
         val parts = mutableListOf<String>()
         var modulo = unsignedNumber
         if (modulo == 0) {
@@ -64,10 +67,10 @@ class Number2TextConverterImpl : Number2TextConverter {
             parts += HUNDREDS[modulo / 100]
             modulo = modulo % 100
             if (modulo in 11..19) {
-                parts += SECOND_DOZEN[modulo % 10]
+                parts += SECOND_TEN[modulo % 10]
             } else {
                 if (modulo == 10 || modulo >= 20) {
-                    parts += DOZENS[modulo / 10]
+                    parts += TENS[modulo / 10]
                     modulo = modulo % 10
                 }
                 parts += when (unitInfo.gender) {
@@ -85,12 +88,14 @@ class Number2TextConverterImpl : Number2TextConverter {
         }
         return ThousandInfo(
             numberValue = unsignedNumber,
-            numberText = parts.filter { it.isNotEmpty() }.joinToString(separator = " "),
-            dimension = form
+            numberWords = parts.filter { it.isNotEmpty() },
+            dimension = form,
         )
     }
 
     private companion object {
+        const val ZERO = "ноль"
+
         val HUNDREDS = listOf(
             "",
             "сто",
@@ -103,7 +108,7 @@ class Number2TextConverterImpl : Number2TextConverter {
             "восемьсот",
             "девятьсот"
         )
-        val DOZENS = listOf(
+        val TENS = listOf(
             "",
             "десять",
             "двадцать",
@@ -115,7 +120,7 @@ class Number2TextConverterImpl : Number2TextConverter {
             "восемьдесят",
             "девяносто"
         )
-        val SECOND_DOZEN = listOf(
+        val SECOND_TEN = listOf(
             "",
             "одиннадцать",
             "двенадцать",
@@ -130,7 +135,6 @@ class Number2TextConverterImpl : Number2TextConverter {
         val MALE_DIGITS = listOf("", "один", "два", "три", "четыре", "пять", "шесть", "семь", "восемь", "девять")
         val FEMALE_DIGITS = listOf("", "одна", "две", "три", "четыре", "пять", "шесть", "семь", "восемь", "девять")
         val MIDDLE_DIGITS = listOf("", "одно", "два", "три", "четыре", "пять", "шесть", "семь", "восемь", "девять")
-        const val ZERO = "ноль"
         val DEFAULT_DIMENSION = UnitInfo(Gender.MALE, "", "", "")
         val DIMENSIONS = listOf(
             UnitInfo(Gender.FEMALE, "тысяча", "тысячи", "тысяч"),

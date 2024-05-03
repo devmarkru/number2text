@@ -3,11 +3,16 @@ package ru.devmark.converter.impl
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import ru.devmark.converter.model.Gender
-import ru.devmark.converter.model.UnitInfo
+import ru.devmark.converter.unit.UnitInfo
 
 class CustomUnitInfoTest {
 
     private val converter = Number2TextConverterImpl()
+
+    @Test
+    fun starCount2Text_minus_1() {
+        Assertions.assertEquals("-1 звезда", convertStar(-1))
+    }
 
     @Test
     fun starCount2Text_0() {
@@ -69,8 +74,10 @@ class CustomUnitInfoTest {
         Assertions.assertEquals("1000000 звёзд", convertStar(1_000_000))
     }
 
-    private fun convertStar(count: Long) =
-        converter.convertNumberUnitOnlyToText(count, STAR_INFO)
+    private fun convertStar(count: Long): String {
+        val result = converter.convertNumberToWordsWithUnit(count, STAR_INFO)
+        return "$count ${result.unitWord}"
+    }
 
     private companion object {
         val STAR_INFO = UnitInfo(

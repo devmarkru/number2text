@@ -1,12 +1,13 @@
 package ru.devmark.converter
 
-import ru.devmark.converter.model.UnitInfo
+import ru.devmark.converter.model.ConverterResult
+import ru.devmark.converter.unit.AbstractUnitInfo
 
 interface Number2TextConverter {
 
-    fun convertNumberUnitOnlyToText(number: Long, unit: UnitInfo): String
-
-    fun convertNumberWithUnitToText(number: Long, unit: UnitInfo): String
-
     fun convertNumberToText(number: Long): String
+
+    fun convertNumberToTextWithUnit(number: Long, unit: AbstractUnitInfo): String
+
+    fun convertNumberToWordsWithUnit(number: Long, unit: AbstractUnitInfo): ConverterResult
 }

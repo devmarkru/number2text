@@ -2,11 +2,16 @@ package ru.devmark.converter.impl
 
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
-import ru.devmark.converter.model.Currency
+import ru.devmark.converter.unit.CurrencyUnitInfo
 
 class RoubleTest {
 
     private val converter = Number2TextConverterImpl()
+
+    @Test
+    fun roubles2Text_minus_11() {
+        Assertions.assertEquals("минус одиннадцать рублей", convertRouble(-11))
+    }
 
     @Test
     fun roubles2Text_0() {
@@ -74,5 +79,5 @@ class RoubleTest {
     }
 
     private fun convertRouble(amount: Long) =
-        converter.convertNumberWithUnitToText(amount, Currency.RUB.unitInfo)
+        converter.convertNumberToTextWithUnit(amount, CurrencyUnitInfo.RUB)
 }

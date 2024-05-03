@@ -2,10 +2,11 @@ package ru.devmark.converter.impl
 
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
+import ru.devmark.converter.Number2TextConverter
 
 class Number2TextTest {
 
-    private val converter = Number2TextConverterImpl()
+    private val converter: Number2TextConverter = Number2TextConverterImpl()
 
     @Test
     fun number2Text_minus_12() {
