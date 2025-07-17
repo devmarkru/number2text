@@ -10,4 +10,18 @@ interface Number2TextConverter {
     fun convertNumberToTextWithUnit(number: Long, unit: AbstractUnitInfo): String
 
     fun convertNumberToWordsWithUnit(number: Long, unit: AbstractUnitInfo): ConverterResult
+
+    fun convertDecimalNumberToTextWithUnits(
+        number: java.math.BigDecimal,
+        integerUnit: AbstractUnitInfo,
+        fractionalUnit: AbstractUnitInfo,
+        fractionalRatio: Int,
+    ): String
+
+    fun convertDecimalNumberToWordsWithUnits(
+        number: java.math.BigDecimal,
+        integerUnit: AbstractUnitInfo,
+        fractionalUnit: AbstractUnitInfo,
+        fractionalRatio: Int,
+    ): List<String>
 }

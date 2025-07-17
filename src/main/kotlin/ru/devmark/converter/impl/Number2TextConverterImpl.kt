@@ -6,6 +6,8 @@ import ru.devmark.converter.model.ConverterResult
 import ru.devmark.converter.model.Gender
 import ru.devmark.converter.model.ThousandInfo
 import ru.devmark.converter.unit.UnitInfo
+import java.math.BigDecimal
+import java.math.RoundingMode
 import kotlin.math.absoluteValue
 
 class Number2TextConverterImpl : Number2TextConverter {
@@ -22,6 +24,58 @@ class Number2TextConverterImpl : Number2TextConverter {
 
     override fun convertNumberToWordsWithUnit(number: Long, unit: AbstractUnitInfo): ConverterResult =
         convertCountWithUnitToWords(number, unit)
+
+    override fun convertDecimalNumberToTextWithUnits(
+        number: BigDecimal,
+        integerUnit: AbstractUnitInfo,
+        fractionalUnit: AbstractUnitInfo,
+        fractionalRatio: Int,
+    ): String =
+        convertDecimalNumberToWordsWithUnits(
+            number,
+            integerUnit,
+            fractionalUnit,
+            fractionalRatio,
+        ).joinToString(separator = " ")
+
+    override fun convertDecimalNumberToWordsWithUnits(
+        number: BigDecimal,
+        integerUnit: AbstractUnitInfo,
+        fractionalUnit: AbstractUnitInfo,
+        fractionalRatio: Int,
+    ): List<String> {
+        val scale = fractionalRatio.toString().length - 1
+        if (number !in BigDecimal.valueOf(Long.MIN_VALUE)..BigDecimal.valueOf(Long.MAX_VALUE)) {
+            throw RuntimeException("The number is too large!")
+        }
+        val scaled = number.setScale(scale, RoundingMode.HALF_UP)
+
+        val integerValue = scaled.toLong()
+        val fractionalValue = scaled.abs().unscaledValue().toLong() % fractionalRatio
+
+        val integerResult = convertNumberToWordsWithUnit(integerValue, integerUnit)
+        val fractionalResult = convertNumberToWordsWithUnit(fractionalValue, fractionalUnit)
+
+        val words = mutableListOf<String>()
+        if (integerUnit.asText) {
+            words.addAll(integerResult.numberWords)
+        } else {
+            if (integerValue < 0) {
+                words.add("минус")
+            }
+            words.add(integerValue.absoluteValue.toString())
+        }
+        words.add(integerResult.unitWord)
+
+        if (fractionalUnit.asText) {
+            words.addAll(fractionalResult.numberWords)
+        } else {
+            words.add(fractionalValue.toString())
+        }
+        words.add(fractionalResult.unitWord)
+
+        return words
+    }
 
     private fun convertCountWithUnitToWords(number: Long, unit: AbstractUnitInfo): ConverterResult {
         val dimensions = mutableListOf<AbstractUnitInfo>()

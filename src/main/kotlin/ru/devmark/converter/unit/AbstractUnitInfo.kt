@@ -7,4 +7,10 @@ interface AbstractUnitInfo {
     val singleForm: String
     val severalForm: String
     val pluralForm: String
+
+    /**
+     * Whether numbers for this unit should be spelled out as words by default.
+     */
+    val asText: Boolean
+        get() = true
 }
