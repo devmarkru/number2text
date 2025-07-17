@@ -7,4 +7,5 @@ data class UnitInfo(
     override val singleForm: String,
     override val severalForm: String,
     override val pluralForm: String,
+    override val asText: Boolean = true,
 ): AbstractUnitInfo

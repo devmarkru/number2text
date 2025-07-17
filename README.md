@@ -61,41 +61,31 @@ println(converter.convertNumberToTextWithUnit(125, CurrencyUnitInfo.RUB))
 * `WeightUnitInfo` - единицы измерения веса: граммы, килограммы и миллиграммы
 
 ### Комплексный пример
-Рассмотрим более сложный пример. Предположим, вы хотите записать в виде текста сумму, представленную десятичной дробью типа `BigDecimal`. Целая часть - рубли, а дробная - копейки. Для решения этой задачи можно написать следующий метод расширения:
+Начиная с версии 2.1.0 размерности содержат признак `asText`, определяющий, следует ли записывать число словами или оставить в виде цифр. Методы `convertDecimalNumberToTextWithUnits()` и `convertDecimalNumberToWordsWithUnits()` принимают число `BigDecimal`, единицы измерения для целой и дробной частей и соотношение дробных единиц. Например, для рублей и копеек соотношение равно `100`.
 
 ```kotlin
-fun BigDecimal.toTextWithUnits(
-    integerUnitInfo: AbstractUnitInfo,
-    fractionalUnitInfo: AbstractUnitInfo,
-): String {
-    if (this !in Long.MIN_VALUE.toBigDecimal()..Long.MAX_VALUE.toBigDecimal()) {
-        throw RuntimeException("The number is too large!")
-    }
-    val amount = this.setScale(2, RoundingMode.HALF_UP)
-
-    val integerResult = converter.convertNumberToWordsWithUnit(amount.toLong(), integerUnitInfo)
-    val fractionalValue = amount.abs().unscaledValue().toLong() % 100
-    val fractionalResult = converter.convertNumberToWordsWithUnit(fractionalValue, fractionalUnitInfo)
-    val words = mutableListOf<String>()
-    words.addAll(integerResult.numberWords)
-    words.add(integerResult.unitWord)
-    words.add(fractionalValue.toString())
-    words.add(fractionalResult.unitWord)
-    return words.joinToString(separator = " ")
-}
+val converter = Number2TextConverterImpl()
+println(
+    converter.convertDecimalNumberToTextWithUnits(
+        BigDecimal("100.21"),
+        UnitInfo(Gender.MALE, "доллар", "доллара", "долларов", asText = false),
+        CurrencyUnitInfo.CENT,
+        100,
+    )
+)
+// "100 долларов двадцать один цент"
 ```
 
-В качестве параметров метод принимает на вход объект `AbstractUnitInfo` для целой части (рубли) и для дробной (копейки). Значения для этих валют содержатся в перечислении `CurrencyUnitInfo`.
-
-Сначала мы проверяем, что текущее значение суммы находится в допустимых границах типа `Long`. Также мы должны быть уверены, что точность - два знака после запятой.
-
-После этого мы извлекаем из суммы отдельно целую и дробную части. Для каждой такой части вызываем метод `convertNumberToWordsWithUnit()`. В конце объединяем все слова в единую текстовую строку с помощью пробелов.
-
-Вызов данного метода будет выглядеть так:
+Метод самостоятельно округлит исходное значение до нужной точности и преобразует обе части числа с учётом нужных размерностей.
 
 ```kotlin
-BigDecimal("100.21").toTextWithUnits(CurrencyUnitInfo.USD, CurrencyUnitInfo.CENT)
-// метод вернёт строку "сто долларов 21 цент"
+println(
+    converter.convertDecimalNumberToWordsWithUnits(
+        BigDecimal("1.05"),
+        CurrencyUnitInfo.EUR,
+        CurrencyUnitInfo.CENT,
+        100,
+    )
+)
+// ["один", "евро", "5", "центов"]
 ```
-
-Вы можете легко изменить логику формирования текстовой строки в зависимости от ваших потребностей.
