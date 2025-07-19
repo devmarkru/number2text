@@ -80,4 +80,32 @@ class DecimalNumberTest {
             result,
         )
     }
+
+    @Test
+    fun trillionRubles() {
+        val result = converter.convertDecimalNumberToTextWithUnits(
+            BigDecimal("1000000000000.99"),
+            CurrencyUnitInfo.RUB,
+            CurrencyUnitInfo.KOPECK,
+            100,
+        )
+        Assertions.assertEquals(
+            "один триллион рублей девяносто девять копеек",
+            result,
+        )
+    }
+
+    @Test
+    fun twoQuadrillionRubles() {
+        val result = converter.convertDecimalNumberToTextWithUnits(
+            BigDecimal("2000000000000000.01"),
+            CurrencyUnitInfo.RUB,
+            CurrencyUnitInfo.KOPECK,
+            100,
+        )
+        Assertions.assertEquals(
+            "два квадриллиона рублей одна копейка",
+            result,
+        )
+    }
 }

@@ -7,22 +7,35 @@ import ru.devmark.converter.model.Gender
 import ru.devmark.converter.model.ThousandInfo
 import ru.devmark.converter.unit.UnitInfo
 import java.math.BigDecimal
+import java.math.BigInteger
 import java.math.RoundingMode
 import kotlin.math.absoluteValue
 
 class Number2TextConverterImpl : Number2TextConverter {
 
     override fun convertNumberToText(number: Long): String =
+        convertNumberToText(BigInteger.valueOf(number))
+
+    override fun convertNumberToText(number: BigInteger): String =
         convertNumberToWordsWithUnit(number, DEFAULT_DIMENSION).numberWords
             .joinToString(separator = " ")
 
     override fun convertNumberToTextWithUnit(number: Long, unit: AbstractUnitInfo): String {
+        val result = convertNumberToWordsWithUnit(BigInteger.valueOf(number), unit)
+        return (result.numberWords + result.unitWord)
+            .joinToString(separator = " ")
+    }
+
+    override fun convertNumberToTextWithUnit(number: BigInteger, unit: AbstractUnitInfo): String {
         val result = convertNumberToWordsWithUnit(number, unit)
         return (result.numberWords + result.unitWord)
             .joinToString(separator = " ")
     }
 
     override fun convertNumberToWordsWithUnit(number: Long, unit: AbstractUnitInfo): ConverterResult =
+        convertNumberToWordsWithUnit(BigInteger.valueOf(number), unit)
+
+    override fun convertNumberToWordsWithUnit(number: BigInteger, unit: AbstractUnitInfo): ConverterResult =
         convertCountWithUnitToWords(number, unit)
 
     override fun convertDecimalNumberToTextWithUnits(
@@ -77,29 +90,31 @@ class Number2TextConverterImpl : Number2TextConverter {
         return words
     }
 
-    private fun convertCountWithUnitToWords(number: Long, unit: AbstractUnitInfo): ConverterResult {
+    private fun convertCountWithUnitToWords(number: Long, unit: AbstractUnitInfo): ConverterResult =
+        convertCountWithUnitToWords(BigInteger.valueOf(number), unit)
+
+    private fun convertCountWithUnitToWords(number: BigInteger, unit: AbstractUnitInfo): ConverterResult {
         val dimensions = mutableListOf<AbstractUnitInfo>()
         dimensions.add(unit)
         dimensions.addAll(DIMENSIONS)
-        var absNumber = number.absoluteValue
+        var absNumber = number.abs()
         var dimensionIndex = 0
         val thousands = mutableListOf<ThousandInfo>()
+        val thousand = BigInteger.valueOf(1000)
         do {
-            val modulo = absNumber % 1000
-            absNumber = absNumber / 1000
-            if (modulo >= 0 || absNumber == 0L) {
-                val dimension = dimensions[dimensionIndex]
-                val thousandInfo = thousandToWords(modulo.toInt(), dimension)
-                thousands.add(0, thousandInfo)
-            }
+            val modulo = absNumber.mod(thousand).toInt()
+            absNumber = absNumber.divide(thousand)
+            val dimension = dimensions[dimensionIndex]
+            val thousandInfo = thousandToWords(modulo, dimension)
+            thousands.add(0, thousandInfo)
             dimensionIndex++
-        } while (dimensionIndex < dimensions.size && absNumber > 0)
+        } while (dimensionIndex < dimensions.size && absNumber > BigInteger.ZERO)
         val parts = mutableListOf<String>()
-        if (number < 0) {
+        if (number.signum() < 0) {
             parts.add(0, "минус")
         }
         thousands.forEachIndexed { index, thousandInfo ->
-            if (thousandInfo.numberValue > 0 || number == 0L) {
+            if (thousandInfo.numberValue > 0 || number == BigInteger.ZERO) {
                 parts.addAll(thousandInfo.numberWords)
             }
             if (thousandInfo.dimension.isNotBlank() && thousandInfo.numberValue > 0 && index < thousands.lastIndex) {
@@ -194,7 +209,14 @@ class Number2TextConverterImpl : Number2TextConverter {
             UnitInfo(Gender.FEMALE, "тысяча", "тысячи", "тысяч"),
             UnitInfo(Gender.MALE, "миллион", "миллиона", "миллионов"),
             UnitInfo(Gender.MALE, "миллиард", "миллиарда", "миллиардов"),
-            UnitInfo(Gender.MALE, "триллион", "триллиона", "триллионов")
+            UnitInfo(Gender.MALE, "триллион", "триллиона", "триллионов"),
+            UnitInfo(Gender.MALE, "квадриллион", "квадриллиона", "квадриллионов"),
+            UnitInfo(Gender.MALE, "квинтиллион", "квинтиллиона", "квинтиллионов"),
+            UnitInfo(Gender.MALE, "секстиллион", "секстиллиона", "секстиллионов"),
+            UnitInfo(Gender.MALE, "септиллион", "септиллиона", "септиллионов"),
+            UnitInfo(Gender.MALE, "октиллион", "октиллиона", "октиллионов"),
+            UnitInfo(Gender.MALE, "нониллион", "нониллиона", "нониллионов"),
+            UnitInfo(Gender.MALE, "дециллион", "дециллиона", "дециллионов"),
         )
     }
 }
